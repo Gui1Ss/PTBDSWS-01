@@ -6,7 +6,36 @@ Home
 
 {% block conteudo %}
 
-<h1>Dados da última atualização:</h1>
+<h1>Olá, {{ nome or "Estranho" }}!</h1>
+
+<p>A sua Insituição de ensino é {{ instituicao }}</p>
+
+<p>Está cursando a disciplina de {{ disciplina }}</p>
+
+<p>O IP do computador remoto é: {{ ip }}</p>
+
+<p>O host da aplicação é: {{ host }}</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.nome.label }}<br>
+        {{ form.nome(size=32) }}
+    </p>
+    <p>
+        {{ form.sobrenome.label }}<br>
+        {{ form.sobrenome(size=32) }}
+    </p>
+    <p>
+        {{ form.instituicao.label }}<br>
+        {{ form.instituicao(size=32) }}
+    </p>
+    <p>
+        {{ form.disciplina.label }}<br>
+        {{ form.disciplina() }}
+    </p>
+    {{ form.submit(class="btn btn-default") }}
+</form>
 
 <hr>
 

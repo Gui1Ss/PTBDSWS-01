@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Login
+{% endblock %}
+
+{% block conteudo %}
+
+<h1>Login:</h1>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.usuario(size=32, placeholder="Usuário ou e-mail") }}
+    </p>
+    <p>
+        {{ form.senha(size=32, placeholder="Informe a sua senha") }}
+    </p>
+    {{ form.submit(class="btn btn-default") }}
+</form>
+
+<hr>
+
+<p>{{ data_hora }}</p>
+
+<p>{{ tempo }}</p>
+
+{% endblock %}

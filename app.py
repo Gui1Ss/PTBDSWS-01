@@ -2,7 +2,7 @@ from flask import Flask, request, Response, redirect, abort, render_template, se
 #from flask import Flask, render_template, session, redirect, url_for
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SelectField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
 
@@ -14,12 +14,41 @@ class NameForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+class HomeForm(FlaskForm):
+    nome = StringField('Informe o seu nome', validators=[DataRequired()])
+    sobrenome = StringField('Informe o seu sobrenome:', validators=[DataRequired()])
+    instituicao = StringField('Informe a sua Insituição de ensino:', validators=[DataRequired()])
+    disciplina = SelectField(
+        'Informe a sua disciplina:',
+        choices=[
+            ('dswa5', 'DSWA5'),
+            ('dwba4', 'DWBA4'),
+            ('GPSA5', 'Gestão de projetos')
+        ]
+    )
+    submit = SubmitField('Submit')
+
+
+class LoginForm(FlaskForm):
+    usuario = StringField('Usuário ou e-mail', validators=[DataRequired()])
+    senha = PasswordField('Informe a sua senha', validators=[DataRequired()])
+    submit = SubmitField('Enviar')
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Chave forte'
 
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def index():
+    form = HomeForm()
+    if form.validate_on_submit():
+        session['nome'] = form.nome.data
+        session['sobrenome'] = form.sobrenome.data
+        session['instituicao'] = form.instituicao.data
+        session['disciplina'] = form.disciplina.data
+        return redirect(url_for('index'))
+
     agora = datetime.now()
     data_hora = agora.strftime(
         "A data e hora local é %d/%m/%Y às %H:%M."
@@ -28,6 +57,32 @@ def index():
 
     return render_template(
         "index.html",
+        form=form,
+        nome=session.get('nome'),
+        instituicao=session.get('instituicao'),
+        disciplina=session.get('disciplina'),
+        ip=session.get('ip'),
+        host=session.get('host'),
+        data_hora=data_hora,
+        tempo=tempo
+    )
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        return redirect(url_for('login'))
+
+    agora = datetime.now()
+    data_hora = agora.strftime(
+        "A data e hora local é %d/%m/%Y às %H:%M."
+    )
+    tempo = "Atualizado há poucos segundos."
+
+    return render_template(
+        "login.html",
+        form=form,
         data_hora=data_hora,
         tempo=tempo
     )
