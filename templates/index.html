@@ -1,46 +1,44 @@
 {% extends "base.html" %}
 
 {% block titulo %}
-Home
+Flasky
 {% endblock %}
 
 {% block conteudo %}
 
-<h1>Olá, {{ nome or "Estranho" }}!</h1>
+<div class="page-header">
+    <h1>Olá, {{ name or "Stranger" }}!</h1>
+    <p>Prazer em conhecê-lo!</p>
+</div>
 
-<p>A sua Insituição de ensino é {{ instituicao }}</p>
-
-<p>Está cursando a disciplina de {{ disciplina }}</p>
-
-<p>O IP do computador remoto é: {{ ip }}</p>
-
-<p>O host da aplicação é: {{ host }}</p>
-
-<form method="POST">
+<form method="POST" class="form" role="form">
     {{ form.hidden_tag() }}
-    <p>
-        {{ form.nome.label }}<br>
-        {{ form.nome(size=32) }}
-    </p>
-    <p>
-        {{ form.sobrenome.label }}<br>
-        {{ form.sobrenome(size=32) }}
-    </p>
-    <p>
-        {{ form.instituicao.label }}<br>
-        {{ form.instituicao(size=32) }}
-    </p>
-    <p>
-        {{ form.disciplina.label }}<br>
-        {{ form.disciplina() }}
-    </p>
+
+    <div class="form-group">
+        {{ form.name.label(class="control-label") }}
+        {{ form.name(class="form-control") }}
+    </div>
+
     {{ form.submit(class="btn btn-default") }}
 </form>
 
-<hr>
+<h2>Relação de usuários cadastrados</h2>
 
-<p>{{ data_hora }}</p>
-
-<p>{{ tempo }}</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nome do usuário</th>
+            <th>Função</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+            <td>{{ usuario.username }}</td>
+            <td>{{ usuario.role.name if usuario.role else "" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 {% endblock %}

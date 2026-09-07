@@ -164,31 +164,29 @@ def make_shell_context():
 @app.route("/", methods=["GET", "POST"])
 def index():
 
-    form = HomeForm()
+    form = NameForm()
 
     if form.validate_on_submit():
 
-        session["nome"] = form.nome.data
-        session["sobrenome"] = form.sobrenome.data
-        session["instituicao"] = form.instituicao.data
-        session["disciplina"] = form.disciplina.data
+        nome = form.name.data
+
+        usuario = User.query.filter_by(username=nome).first()
+
+        if usuario is None:
+            papel = Role.query.filter_by(name="User").first()
+            usuario = User(username=nome, role=papel)
+            db.session.add(usuario)
+            db.session.commit()
+
+        session["name"] = nome
 
         return redirect(url_for("index"))
-
-    agora = datetime.now()
 
     return render_template(
         "index.html",
         form=form,
-        nome=session.get("nome"),
-        instituicao=session.get("instituicao"),
-        disciplina=session.get("disciplina"),
-        ip=session.get("ip"),
-        host=session.get("host"),
-        data_hora=agora.strftime(
-            "A data e hora local é %d/%m/%Y às %H:%M."
-        ),
-        tempo="Atualizado há poucos segundos.",
+        name=session.get("name"),
+        usuarios=User.query.all(),
     )
 
 
