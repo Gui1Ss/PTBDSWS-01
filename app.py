@@ -48,6 +48,15 @@ class NameForm(FlaskForm):
         validators=[DataRequired()]
     )
 
+    role = SelectField(
+        "Role?:",
+        choices=[
+            ("Administrator", "Administrator"),
+            ("Moderator", "Moderator"),
+            ("User", "User"),
+        ]
+    )
+
     submit = SubmitField("Submit")
 
 
@@ -173,7 +182,7 @@ def index():
         usuario = User.query.filter_by(username=nome).first()
 
         if usuario is None:
-            papel = Role.query.filter_by(name="User").first()
+            papel = Role.query.filter_by(name=form.role.data).first()
             usuario = User(username=nome, role=papel)
             db.session.add(usuario)
             db.session.commit()
@@ -187,6 +196,7 @@ def index():
         form=form,
         name=session.get("name"),
         usuarios=User.query.all(),
+        papeis=Role.query.all(),
     )
 
 
