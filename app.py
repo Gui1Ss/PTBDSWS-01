@@ -37,17 +37,19 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # ==========================================
 
 app.config["FLASKY_MAIL_SUBJECT_PREFIX"] = "[Flasky]"
-app.config["FLASKY_ADMIN"] = "flaskaulasweb@zohomail.com"
+
+# Destinatário fixo da turma, exigido pela atividade
+app.config["FLASKY_GRUPO"] = "flaskaulasweb@zohomail.com"
+
+# E-mail institucional do aluno (segundo destinatário)
+app.config["FLASKY_ADMIN"] = os.environ.get("FLASKY_ADMIN")
 
 app.config["ALUNO_NOME"] = "Guilherme Souto Silva"
 app.config["ALUNO_PRONTUARIO"] = "PT3038483"
-app.config["ALUNO_EMAIL"] = os.environ.get(
-    "ALUNO_EMAIL", "guilherme.souto@aluno.ifsp.edu.br"
-)
 
-app.config["MAILGUN_API_KEY"] = os.environ.get("MAILGUN_API_KEY")
-app.config["MAILGUN_DOMAIN"] = os.environ.get("MAILGUN_DOMAIN")
-app.config["MAILGUN_SENDER"] = os.environ.get("MAILGUN_SENDER")
+app.config["API_KEY"] = os.environ.get("API_KEY")
+app.config["API_URL"] = os.environ.get("API_URL")
+app.config["API_FROM"] = os.environ.get("API_FROM")
 
 
 # ==========================================
@@ -184,11 +186,10 @@ def send_email(destinatarios, assunto, template, **kwargs):
 
     try:
         requests.post(
-            f"https://api.mailgun.net/v3/"
-            f"{app.config['MAILGUN_DOMAIN']}/messages",
-            auth=("api", app.config["MAILGUN_API_KEY"]),
+            app.config["API_URL"],
+            auth=("api", app.config["API_KEY"]),
             data={
-                "from": app.config["MAILGUN_SENDER"],
+                "from": app.config["API_FROM"],
                 "to": destinatarios,
                 "subject": (
                     app.config["FLASKY_MAIL_SUBJECT_PREFIX"]
@@ -237,7 +238,7 @@ def index():
             db.session.commit()
 
             send_email(
-                [app.config["FLASKY_ADMIN"], app.config["ALUNO_EMAIL"]],
+                [app.config["FLASKY_GRUPO"], app.config["FLASKY_ADMIN"]],
                 "Novo usuário cadastrado",
                 "mail/new_user",
                 usuario=usuario,
