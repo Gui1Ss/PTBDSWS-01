@@ -8,7 +8,11 @@ from wtforms import StringField, SelectField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from dotenv import load_dotenv
 import os
+import requests
+
+load_dotenv()
 
 
 # ==========================================
@@ -26,6 +30,24 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
 )
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+
+# ==========================================
+# Configuração de e-mail (Mailgun)
+# ==========================================
+
+app.config["FLASKY_MAIL_SUBJECT_PREFIX"] = "[Flasky]"
+app.config["FLASKY_ADMIN"] = "flaskaulasweb@zohomail.com"
+
+app.config["ALUNO_NOME"] = "Guilherme Souto Silva"
+app.config["ALUNO_PRONTUARIO"] = "PT3038483"
+app.config["ALUNO_EMAIL"] = os.environ.get(
+    "ALUNO_EMAIL", "guilherme.souto@aluno.ifsp.edu.br"
+)
+
+app.config["MAILGUN_API_KEY"] = os.environ.get("MAILGUN_API_KEY")
+app.config["MAILGUN_DOMAIN"] = os.environ.get("MAILGUN_DOMAIN")
+app.config["MAILGUN_SENDER"] = os.environ.get("MAILGUN_SENDER")
 
 
 # ==========================================
@@ -154,6 +176,33 @@ class User(db.Model):
 
 
 # ==========================================
+# Envio de e-mail (Mailgun)
+# ==========================================
+
+def send_email(destinatarios, assunto, template, **kwargs):
+    corpo_html = render_template(template + ".html", **kwargs)
+
+    try:
+        requests.post(
+            f"https://api.mailgun.net/v3/"
+            f"{app.config['MAILGUN_DOMAIN']}/messages",
+            auth=("api", app.config["MAILGUN_API_KEY"]),
+            data={
+                "from": app.config["MAILGUN_SENDER"],
+                "to": destinatarios,
+                "subject": (
+                    app.config["FLASKY_MAIL_SUBJECT_PREFIX"]
+                    + " " + assunto
+                ),
+                "html": corpo_html,
+            },
+            timeout=10,
+        )
+    except requests.RequestException:
+        pass
+
+
+# ==========================================
 # Contexto automático do Flask Shell
 # ==========================================
 
@@ -186,6 +235,15 @@ def index():
             usuario = User(username=nome, role=papel)
             db.session.add(usuario)
             db.session.commit()
+
+            send_email(
+                [app.config["FLASKY_ADMIN"], app.config["ALUNO_EMAIL"]],
+                "Novo usuário cadastrado",
+                "mail/new_user",
+                usuario=usuario,
+                aluno_nome=app.config["ALUNO_NOME"],
+                aluno_prontuario=app.config["ALUNO_PRONTUARIO"],
+            )
 
         session["name"] = nome
 
