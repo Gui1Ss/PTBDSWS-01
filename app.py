@@ -44,8 +44,8 @@ app.config["FLASKY_GRUPO"] = "flaskaulasweb@zohomail.com"
 # E-mail institucional do aluno (segundo destinatário)
 app.config["FLASKY_ADMIN"] = os.environ.get("FLASKY_ADMIN")
 
-app.config["ALUNO_NOME"] = "Guilherme Souto Silva"
-app.config["ALUNO_PRONTUARIO"] = "PT3038483"
+app.config["FLASKY_NAME"] = "Guilherme Souto Silva"
+app.config["FLASKY_PRONTUARIO"] = "PT3038483"
 
 app.config["API_KEY"] = os.environ.get("API_KEY")
 app.config["API_URL"] = os.environ.get("API_URL")
@@ -181,9 +181,7 @@ class User(db.Model):
 # Envio de e-mail (Mailgun)
 # ==========================================
 
-def send_email(destinatarios, assunto, template, **kwargs):
-    corpo_html = render_template(template + ".html", **kwargs)
-
+def send_email(destinatarios, assunto, corpo):
     try:
         requests.post(
             app.config["API_URL"],
@@ -195,7 +193,7 @@ def send_email(destinatarios, assunto, template, **kwargs):
                     app.config["FLASKY_MAIL_SUBJECT_PREFIX"]
                     + " " + assunto
                 ),
-                "html": corpo_html,
+                "text": corpo,
             },
             timeout=10,
         )
@@ -237,13 +235,20 @@ def index():
             db.session.add(usuario)
             db.session.commit()
 
+            corpo = f"""
+Aluno: Guilherme Souto / Prontuario: pt3038483
+Novo usuário cadastrado.
+
+Prontuário: {app.config['FLASKY_PRONTUARIO']}
+Nome do aluno: {app.config['FLASKY_NAME']}
+Usuário cadastrado: {usuario.username}
+Função: {usuario.role.name}
+"""
+
             send_email(
                 [app.config["FLASKY_GRUPO"], app.config["FLASKY_ADMIN"]],
                 "Novo usuário cadastrado",
-                "mail/new_user",
-                usuario=usuario,
-                aluno_nome=app.config["ALUNO_NOME"],
-                aluno_prontuario=app.config["ALUNO_PRONTUARIO"],
+                corpo,
             )
 
         session["name"] = nome
