@@ -183,7 +183,7 @@ class User(db.Model):
 
 def send_email(destinatarios, assunto, corpo):
     try:
-        requests.post(
+        resposta = requests.post(
             app.config["API_URL"],
             auth=("api", app.config["API_KEY"]),
             data={
@@ -197,8 +197,12 @@ def send_email(destinatarios, assunto, corpo):
             },
             timeout=10,
         )
-    except requests.RequestException:
-        pass
+        print(
+            f"[MAIL] status={resposta.status_code} "
+            f"resposta={resposta.text}"
+        )
+    except requests.RequestException as erro:
+        print(f"[MAIL] erro de conexao: {erro}")
 
 
 # ==========================================
