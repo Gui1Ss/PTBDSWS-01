@@ -12,14 +12,13 @@ from dotenv import load_dotenv
 import os
 import requests
 
-load_dotenv()
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, ".env"))
 
 
 # ==========================================
 # Configuração da aplicação
 # ==========================================
-
-basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
 
