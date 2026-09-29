@@ -1,10 +1,12 @@
 from flask import (
     Flask, request, Response, redirect, abort,
-    render_template, session, url_for
+    render_template, session, url_for, flash
 )
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, PasswordField, SubmitField
+from wtforms import (
+    StringField, SelectField, PasswordField, SubmitField, BooleanField
+)
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -78,6 +80,10 @@ class NameForm(FlaskForm):
             ("Moderator", "Moderator"),
             ("User", "User"),
         ]
+    )
+
+    enviar_grupo = BooleanField(
+        "Deseja enviar e-mail para flaskaulasweb@zohomail.com?"
     )
 
     submit = SubmitField("Submit")
@@ -200,8 +206,10 @@ def send_email(destinatarios, assunto, corpo):
             f"[MAIL] status={resposta.status_code} "
             f"resposta={resposta.text}"
         )
+        return resposta.ok
     except requests.RequestException as erro:
         print(f"[MAIL] erro de conexao: {erro}")
+        return False
 
 
 # ==========================================
@@ -248,11 +256,27 @@ Usuário cadastrado: {usuario.username}
 Função: {usuario.role.name}
 """
 
-            send_email(
-                [app.config["FLASKY_GRUPO"], app.config["FLASKY_ADMIN"]],
-                "Novo usuário cadastrado",
-                corpo,
-            )
+            assunto = "Novo usuário cadastrado"
+
+            if send_email([app.config["FLASKY_ADMIN"]], assunto, corpo):
+                flash(
+                    "E-mail enviado para o Administrador do sistema, "
+                    "notificando o cadastro de um novo usuário."
+                )
+            else:
+                flash(
+                    "Não foi possível enviar o e-mail "
+                    "para o Administrador do sistema."
+                )
+
+            if form.enviar_grupo.data:
+                if send_email([app.config["FLASKY_GRUPO"]], assunto, corpo):
+                    flash("E-mail enviado para flaskaulasweb@zohomail.com.")
+                else:
+                    flash(
+                        "Não foi possível enviar o e-mail "
+                        "para flaskaulasweb@zohomail.com."
+                    )
 
         session["name"] = nome
 
