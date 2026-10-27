@@ -1,6 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, PasswordField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import (
+    EmailField, PasswordField, SelectField, StringField, SubmitField
+)
+from wtforms.validators import DataRequired, Regexp
 
 
 class NameForm(FlaskForm):
@@ -20,6 +22,19 @@ class NameForm(FlaskForm):
     )
 
     submit = SubmitField("Submit")
+
+
+class CadastroForm(NameForm):
+    email = EmailField(
+        "Qual é o seu email (Envio de notificação do novo usuário)?",
+        validators=[
+            DataRequired(),
+            Regexp(
+                r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                message="Informe um e-mail válido.",
+            ),
+        ],
+    )
 
 
 class HomeForm(FlaskForm):

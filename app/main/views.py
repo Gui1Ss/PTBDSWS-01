@@ -6,7 +6,7 @@ from flask import (
 )
 
 from . import main
-from .forms import LoginForm, NameForm
+from .forms import CadastroForm, LoginForm, NameForm
 from .. import db
 from ..email import corpo_novo_usuario, send_email
 from ..models import Role, User
@@ -15,7 +15,7 @@ from ..models import Role, User
 @main.route("/", methods=["GET", "POST"])
 def index():
 
-    form = NameForm()
+    form = CadastroForm()
 
     if form.validate_on_submit():
 
@@ -35,7 +35,13 @@ def index():
                 current_app.config["FLASKY_GRUPO"],
             ]
 
-            # Um envio por destinatário: se um for recusado, o outro sai
+            email_informado = form.email.data.strip()
+            if email_informado.lower() not in (
+                d.lower() for d in destinatarios
+            ):
+                destinatarios.append(email_informado)
+
+            # Um envio por destinatário: se um for recusado, os outros saem
             for destinatario in destinatarios:
                 if send_email([destinatario], "Novo usuário cadastrado", corpo):
                     flash(f"E-mail enviado para {destinatario}.")
