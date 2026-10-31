@@ -63,6 +63,38 @@ def index():
     )
 
 
+@main.route("/edit_user/<int:id>", methods=["POST"])
+def edit_user(id):
+
+    usuario = User.query.get_or_404(id)
+    novo_nome = request.form.get("new_username", "").strip()
+
+    if not novo_nome:
+        flash("O nome do usuário não pode ficar vazio.")
+    elif novo_nome == usuario.username:
+        pass
+    elif User.query.filter_by(username=novo_nome).first():
+        flash(f"Já existe um usuário chamado {novo_nome}.")
+    else:
+        flash(f"Usuário {usuario.username} alterado para {novo_nome}.")
+        usuario.username = novo_nome
+        db.session.commit()
+
+    return redirect(url_for("main.index"))
+
+
+@main.route("/delete_user/<int:id>", methods=["POST"])
+def delete_user(id):
+
+    usuario = User.query.get_or_404(id)
+    nome = usuario.username
+    db.session.delete(usuario)
+    db.session.commit()
+    flash(f"Usuário {nome} excluído.")
+
+    return redirect(url_for("main.index"))
+
+
 @main.route("/login", methods=["GET", "POST"])
 def login():
 

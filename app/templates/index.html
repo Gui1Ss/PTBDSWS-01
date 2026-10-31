@@ -46,13 +46,26 @@ Flasky
         <tr>
             <th>Nome do usuário</th>
             <th>Função</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         {% for usuario in usuarios %}
         <tr>
-            <td>{{ usuario.username }}</td>
+            <td>
+                <form method="post" action="{{ url_for('main.edit_user', id=usuario.id) }}" class="form-inline" style="margin:0;">
+                    <span class="username-display" style="display:inline-block; min-width:140px;">{{ usuario.username }}</span>
+                    <input type="text" name="new_username" value="{{ usuario.username }}" class="form-control input-sm username-edit" style="display:none; width:140px;">
+                    <button type="button" class="btn btn-default btn-xs edit-toggle">Editar</button>
+                    <button type="submit" class="btn btn-primary btn-xs save-btn" style="display:none;">Salvar</button>
+                </form>
+            </td>
             <td>{{ usuario.role.name if usuario.role else "" }}</td>
+            <td>
+                <form method="post" action="{{ url_for('main.delete_user', id=usuario.id) }}" style="margin:0;">
+                    <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('Deseja realmente excluir este usuário?');">Excluir</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
@@ -83,5 +96,23 @@ Flasky
         {% endfor %}
     </tbody>
 </table>
+
+<script>
+document.querySelectorAll(".edit-toggle").forEach(function (botao) {
+    botao.addEventListener("click", function () {
+        var form = this.closest("form");
+        var nome = form.querySelector(".username-display");
+        var campo = form.querySelector(".username-edit");
+        var salvar = form.querySelector(".save-btn");
+        var editando = nome.style.display === "none";
+
+        nome.style.display = editando ? "inline-block" : "none";
+        campo.style.display = editando ? "none" : "inline-block";
+        salvar.style.display = editando ? "none" : "inline-block";
+        this.textContent = editando ? "Editar" : "Cancelar";
+        if (!editando) campo.focus();
+    });
+});
+</script>
 
 {% endblock %}
