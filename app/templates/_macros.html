@@ -1,0 +1,21 @@
+{% macro render_form(form) %}
+<form method="POST" class="form" role="form">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type not in ("hidden", "submit") %}
+        {% if field.type == "BooleanField" %}
+        <div class="checkbox">
+            <label>{{ field() }} {{ field.label.text }}</label>
+        </div>
+        {% else %}
+        <div class="form-group{% if field.errors %} has-error{% endif %}">
+            {{ field.label(class="control-label") }}
+            {{ field(class="form-control") }}
+            {% for erro in field.errors %}
+            <span class="help-block">{{ erro }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endfor %}
+    {{ form.submit(class="btn btn-default") }}
+</form>
+{% endmacro %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_form %}
+
+{% block titulo %}Flasky - Login{% endblock %}
+
+{% block conteudo %}
+<div class="page-header">
+    <h1>Login</h1>
+</div>
+<div class="col-md-4">
+    {{ render_form(form) }}
+    <br>
+    <p>Esqueceu sua senha? <a href="{{ url_for('auth.password_reset_request') }}">Clique aqui para redefini-la</a>.</p>
+    <p>Novo usuário? <a href="{{ url_for('auth.register') }}">Clique aqui para se cadastrar</a>.</p>
+</div>
+{% endblock %}

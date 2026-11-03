@@ -1,22 +1,30 @@
 import requests
-from flask import current_app
+from flask import current_app, render_template
 
 
-def send_email(destinatarios, assunto, corpo):
+def send_email(destinatarios, assunto, corpo, html=None):
     config = current_app.config
+
+    if not config.get("API_URL") or not config.get("API_KEY"):
+        print("[MAIL] API_URL/API_KEY não configuradas; e-mail não enviado.")
+        return False
+
+    dados = {
+        "from": config["API_FROM"],
+        "to": destinatarios,
+        "subject": (
+            config["FLASKY_MAIL_SUBJECT_PREFIX"] + " " + assunto
+        ),
+        "text": corpo,
+    }
+    if html:
+        dados["html"] = html
 
     try:
         resposta = requests.post(
             config["API_URL"],
             auth=("api", config["API_KEY"]),
-            data={
-                "from": config["API_FROM"],
-                "to": destinatarios,
-                "subject": (
-                    config["FLASKY_MAIL_SUBJECT_PREFIX"] + " " + assunto
-                ),
-                "text": corpo,
-            },
+            data=dados,
             timeout=10,
         )
         print(
@@ -27,6 +35,13 @@ def send_email(destinatarios, assunto, corpo):
     except requests.RequestException as erro:
         print(f"[MAIL] erro de conexao: {erro}")
         return False
+
+
+def send_email_template(destinatario, assunto, template, **kwargs):
+    """Envia e-mail usando os templates .txt/.html (ex.: auth/email/confirm)."""
+    corpo = render_template(template + ".txt", **kwargs)
+    html = render_template(template + ".html", **kwargs)
+    return send_email([destinatario], assunto, corpo, html=html)
 
 
 def corpo_novo_usuario(usuario):

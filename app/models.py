@@ -1,4 +1,24 @@
-from . import db
+from flask import current_app
+from flask_login import UserMixin
+from itsdangerous import BadData, URLSafeTimedSerializer as Serializer
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from . import db, login_manager
+
+
+def _gerar_token(dados, expiration):
+    s = Serializer(current_app.config["SECRET_KEY"])
+    return s.dumps({**dados, "exp": expiration})
+
+
+def _ler_token(token):
+    s = Serializer(current_app.config["SECRET_KEY"])
+    try:
+        dados = s.loads(token)
+        # Valida a idade do token usando a expiração gravada nele
+        return s.loads(token, max_age=dados.get("exp", 3600))
+    except (BadData, AttributeError, TypeError):
+        return None
 
 
 class Role(db.Model):
@@ -24,12 +44,18 @@ class Role(db.Model):
         return f"<Role '{self.name}'>"
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = "users"
 
     id = db.Column(
         db.Integer,
         primary_key=True
+    )
+
+    email = db.Column(
+        db.String(64),
+        unique=True,
+        index=True
     )
 
     username = db.Column(
@@ -44,5 +70,71 @@ class User(db.Model):
         db.ForeignKey("roles.id")
     )
 
+    password_hash = db.Column(db.String(256))
+
+    confirmed = db.Column(db.Boolean, default=False)
+
+    @property
+    def password(self):
+        raise AttributeError("password is not a readable attribute")
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        if self.password_hash is None:
+            return False
+        return check_password_hash(self.password_hash, password)
+
+    def generate_confirmation_token(self, expiration=3600):
+        return _gerar_token({"confirm": self.id}, expiration)
+
+    def confirm(self, token):
+        dados = _ler_token(token)
+        if dados is None or dados.get("confirm") != self.id:
+            return False
+        self.confirmed = True
+        db.session.add(self)
+        return True
+
+    def generate_reset_token(self, expiration=3600):
+        return _gerar_token({"reset": self.id}, expiration)
+
+    @staticmethod
+    def reset_password(token, new_password):
+        dados = _ler_token(token)
+        if dados is None or dados.get("reset") is None:
+            return False
+        user = db.session.get(User, dados.get("reset"))
+        if user is None:
+            return False
+        user.password = new_password
+        db.session.add(user)
+        return True
+
+    def generate_email_change_token(self, new_email, expiration=3600):
+        return _gerar_token(
+            {"change_email": self.id, "new_email": new_email}, expiration
+        )
+
+    def change_email(self, token):
+        dados = _ler_token(token)
+        if dados is None or dados.get("change_email") != self.id:
+            return False
+        new_email = dados.get("new_email")
+        if new_email is None:
+            return False
+        if User.query.filter_by(email=new_email).first() is not None:
+            return False
+        self.email = new_email
+        db.session.add(self)
+        return True
+
     def __repr__(self):
         return f"<User '{self.username}'>"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))

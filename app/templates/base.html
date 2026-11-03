@@ -55,10 +55,29 @@
             </li>
         </ul>
 
+        <ul class="nav navbar-nav navbar-right">
+            {% if current_user.is_authenticated %}
+            <li class="navbar-text">{{ current_user.username }}</li>
+            <li><a href="{{ url_for('auth.change_password') }}">Alterar senha</a></li>
+            <li><a href="{{ url_for('auth.change_email_request') }}">Alterar e-mail</a></li>
+            <li><a href="{{ url_for('auth.logout') }}">Sair</a></li>
+            {% else %}
+            <li><a href="{{ url_for('auth.login') }}">Entrar</a></li>
+            <li><a href="{{ url_for('auth.register') }}">Cadastrar</a></li>
+            {% endif %}
+        </ul>
+
     </div>
 </nav>
 
 <div class="container">
+
+{# A home já exibe as próprias mensagens flash #}
+{% if request.endpoint != 'main.index' %}
+{% for mensagem in get_flashed_messages() %}
+<div class="alert alert-warning">{{ mensagem | safe }}</div>
+{% endfor %}
+{% endif %}
 
 {% block conteudo %}
 

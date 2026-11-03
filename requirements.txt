@@ -10,3 +10,5 @@ Flask-SQLAlchemy
 Flask-Migrate
 requests
 python-dotenv
+Flask-Login
+email-validator
