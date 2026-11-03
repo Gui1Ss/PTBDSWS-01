@@ -8,7 +8,6 @@ db = SQLAlchemy()
 
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
-login_manager.login_message = "Faça login para acessar esta página."
 
 
 def create_app(config_name):

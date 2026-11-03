@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 
-{% block titulo %}Flasky - Confirme sua conta{% endblock %}
+{% block titulo %}Flasky - Confirm your account{% endblock %}
 
 {% block conteudo %}
 <div class="page-header">
-    <h1>Olá, {{ current_user.username }}!</h1>
-    <h3>Você ainda não confirmou sua conta.</h3>
+    <h1>
+        Hello, {{ current_user.username }}!
+    </h1>
+    <h3>You have not confirmed your account yet.</h3>
     <p>
-        Antes de acessar o site, você precisa confirmar sua conta.
-        Verifique sua caixa de entrada: você deve ter recebido um e-mail com o link de confirmação.
+        Before you can access this site you need to confirm your account.
+        Check your inbox, you should have received an email with a confirmation link.
     </p>
     <p>
-        Precisa de outro e-mail de confirmação?
-        <a href="{{ url_for('auth.resend_confirmation') }}">Clique aqui</a>
+        Need another confirmation email?
+        <a href="{{ url_for('auth.resend_confirmation') }}">Click here</a>
     </p>
 </div>
 {% endblock %}
