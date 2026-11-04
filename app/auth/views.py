@@ -14,6 +14,15 @@ from .forms import (
 )
 
 
+def enviar_email(destinatario, assunto, template, mensagem_ok, **kwargs):
+    """Envia o e-mail e avisa na tela se saiu ou por que falhou."""
+    ok, motivo = send_email_template(destinatario, assunto, template, **kwargs)
+    if ok:
+        flash(mensagem_ok)
+    else:
+        flash(f'Não foi possível enviar o e-mail para {destinatario}: {motivo}')
+
+
 def flash_link(texto, endpoint, token):
     """Mostra na tela o link enviado por e-mail (Mailgun sandbox)."""
     url = url_for(endpoint, token=token, _external=True)
@@ -71,9 +80,10 @@ def register():
         db.session.add(user)
         db.session.commit()
         token = user.generate_confirmation_token()
-        send_email_template(user.email, 'Confirm Your Account',
-                            'auth/email/confirm', user=user, token=token)
-        flash('A confirmation email has been sent to you by email.')
+        enviar_email(user.email, 'Confirm Your Account',
+                     'auth/email/confirm',
+                     'A confirmation email has been sent to you by email.',
+                     user=user, token=token)
         flash_link('To confirm your account', 'auth.confirm', token)
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
@@ -96,9 +106,10 @@ def confirm(token):
 @login_required
 def resend_confirmation():
     token = current_user.generate_confirmation_token()
-    send_email_template(current_user.email, 'Confirm Your Account',
-                        'auth/email/confirm', user=current_user, token=token)
-    flash('A new confirmation email has been sent to you by email.')
+    enviar_email(current_user.email, 'Confirm Your Account',
+                 'auth/email/confirm',
+                 'A new confirmation email has been sent to you by email.',
+                 user=current_user, token=token)
     flash_link('To confirm your account', 'auth.confirm', token)
     return redirect(url_for('main.index'))
 
@@ -126,14 +137,16 @@ def password_reset_request():
     form = PasswordResetRequestForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.lower()).first()
-        flash('An email with instructions to reset your password has been '
-              'sent to you.')
+        mensagem_ok = ('An email with instructions to reset your password '
+                       'has been sent to you.')
         if user:
             token = user.generate_reset_token()
-            send_email_template(user.email, 'Reset Your Password',
-                                'auth/email/reset_password',
-                                user=user, token=token)
+            enviar_email(user.email, 'Reset Your Password',
+                         'auth/email/reset_password', mensagem_ok,
+                         user=user, token=token)
             flash_link('To reset your password', 'auth.password_reset', token)
+        else:
+            flash(mensagem_ok)
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_password.html', form=form)
 
@@ -161,11 +174,11 @@ def change_email_request():
         if current_user.verify_password(form.password.data):
             new_email = form.email.data.lower()
             token = current_user.generate_email_change_token(new_email)
-            send_email_template(new_email, 'Confirm your email address',
-                                'auth/email/change_email',
-                                user=current_user, token=token)
-            flash('An email with instructions to confirm your new email '
-                  'address has been sent to you.')
+            enviar_email(new_email, 'Confirm your email address',
+                         'auth/email/change_email',
+                         'An email with instructions to confirm your new '
+                         'email address has been sent to you.',
+                         user=current_user, token=token)
             flash_link('To confirm your new email address',
                        'auth.change_email', token)
             return redirect(url_for('main.index'))
