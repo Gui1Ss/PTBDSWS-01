@@ -4,12 +4,28 @@ from flask import (
     Response, abort, current_app, flash, redirect,
     render_template, request, session, url_for
 )
+from flask_login import current_user
 
 from . import main
 from .forms import CadastroForm, LoginForm, NameForm
 from .. import db
 from ..email import corpo_novo_usuario, send_email
 from ..models import Role, User
+
+
+@main.before_request
+def exigir_login():
+    """Todas as páginas deste blueprint exigem login.
+
+    As telas de /auth (login, cadastro, redefinir senha) continuam abertas.
+    Depois do login, o usuário volta para a página que tinha pedido.
+    """
+    if current_user.is_authenticated:
+        return None
+    if request.method == "GET":
+        destino = request.full_path if request.query_string else request.path
+        return redirect(url_for("auth.login", next=destino))
+    return redirect(url_for("auth.login"))
 
 
 @main.route("/", methods=["GET", "POST"])
