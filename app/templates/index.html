@@ -7,7 +7,7 @@ Flasky
 {% block conteudo %}
 
 <div class="page-header">
-    <h1>Olá, {{ name or "Stranger" }}!</h1>
+    <h1>Olá, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}{{ name or "Stranger" }}{% endif %}!</h1>
     <p>Prazer em conhecê-lo!</p>
     {% for mensagem in get_flashed_messages() %}
     <p>{{ mensagem }}</p>
